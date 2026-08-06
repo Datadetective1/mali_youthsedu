@@ -1,0 +1,238 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Design tokens
+   --------------------------------------------------------------------------
+   Warm, grounded, professional. The palette avoids both the "NGO brochure"
+   look (flat institutional blue) and stereotyped "African" motifs. It leans on
+   a deep forest green for trust and growth, a warm ochre for energy, and
+   sand-tinted neutrals so large surfaces never feel clinical.
+
+   Typography is a pure system stack — zero webfont bytes. On a 2G connection a
+   200 KB font file is the difference between a usable page and an abandoned
+   one, so this is a deliberate performance decision, not an oversight.
+   ========================================================================== */
+
+@theme {
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', monospace;
+
+  /* Brand — deep forest green */
+  --color-brand-50: #edf7f3;
+  --color-brand-100: #d3ebe1;
+  --color-brand-200: #a7d7c4;
+  --color-brand-300: #71bba1;
+  --color-brand-400: #43997d;
+  --color-brand-500: #257a61;
+  --color-brand-600: #17614d;
+  --color-brand-700: #124d3e;
+  --color-brand-800: #103d32;
+  --color-brand-900: #0d322a;
+
+  /* Accent — warm ochre */
+  --color-accent-50: #fdf5e9;
+  --color-accent-100: #f9e6c6;
+  --color-accent-200: #f2cb8c;
+  --color-accent-300: #e8a94f;
+  --color-accent-400: #d98c26;
+  --color-accent-500: #bd7014;
+  --color-accent-600: #9a5711;
+  --color-accent-700: #7a4412;
+  --color-accent-800: #613714;
+  --color-accent-900: #4f2e14;
+
+  /* Neutrals — warm, sand-tinted greys */
+  --color-sand-50: #faf9f7;
+  --color-sand-100: #f3f1ec;
+  --color-sand-200: #e6e2d9;
+  --color-sand-300: #d3cdc0;
+  --color-sand-400: #a8a094;
+  --color-sand-500: #7c7568;
+  --color-sand-600: #5c564c;
+  --color-sand-700: #443f38;
+  --color-sand-800: #2e2b26;
+  --color-sand-900: #1c1a17;
+
+  /* Semantic */
+  --color-success-50: #ecf8ef;
+  --color-success-600: #1d7a3c;
+  --color-success-700: #16612f;
+  --color-warning-50: #fef6e7;
+  --color-warning-600: #9a6408;
+  --color-warning-700: #7c5107;
+  --color-danger-50: #fdeeee;
+  --color-danger-600: #ab2222;
+  --color-danger-700: #8b1c1c;
+  --color-info-50: #eaf2fb;
+  --color-info-600: #1f5aa5;
+  --color-info-700: #194a89;
+
+  --radius-card: 0.875rem;
+
+  /* Restrained shadows — heavy blurs cost paint time on low-end GPUs. */
+  --shadow-card: 0 1px 2px rgb(28 26 23 / 0.06), 0 1px 3px rgb(28 26 23 / 0.08);
+  --shadow-raised: 0 2px 4px rgb(28 26 23 / 0.06), 0 6px 16px rgb(28 26 23 / 0.10);
+
+  /* Height of the fixed bottom navigation on small screens. */
+  --spacing-bottomnav: 4.25rem;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: light;
+    /* Never let a long unbroken URL or job description blow out the layout. */
+    overflow-wrap: break-word;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-sand-50);
+    color: var(--color-sand-800);
+    font-family: var(--font-sans);
+    /* 16px minimum: anything smaller triggers zoom-on-focus in mobile Safari. */
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-sand-900);
+    font-weight: 700;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* A single, consistent, highly visible focus ring everywhere. */
+  :focus-visible {
+    outline: 3px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-900);
+  }
+
+  /* Honour the OS setting. No decorative motion is essential to comprehension. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+@utility skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-brand-700);
+  color: white;
+  font-weight: 600;
+
+  &:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+}
+
+/* Visible only to screen readers. */
+@utility sr-only-focusable {
+  &:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* Skeleton placeholder used by loading.tsx routes. */
+@utility skeleton {
+  background-color: var(--color-sand-200);
+  border-radius: 0.5rem;
+  animation: myp-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes myp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ==========================================================================
+   Print — used by "Télécharger le plan (PDF)", which prints to PDF rather
+   than shipping a PDF library to the client. See docs/DECISIONS.md.
+   ========================================================================== */
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  [data-print='hide'],
+  header[data-app-header],
+  nav[data-bottom-nav],
+  footer[data-app-footer] {
+    display: none !important;
+  }
+
+  [data-print='block'] {
+    display: block !important;
+  }
+
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 9pt;
+    color: #444;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid;
+  }
+}
