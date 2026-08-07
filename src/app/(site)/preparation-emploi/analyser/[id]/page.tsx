@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getDictionary, formatDate, getLocale } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { getAnalysis } from '@/lib/db/repository';
 import { Breadcrumb, PageHeader, PageShell } from '@/components/layout/page';
 import { AnalysisResult } from '@/components/jobs/analysis-result';
@@ -17,7 +17,10 @@ export default async function SavedAnalysisPage({
   const { id } = await params;
   const t = await getDictionary();
   const locale = await getLocale();
-  const session = await requireSession(`/preparation-emploi/analyser/${id}`);
+  const session = await getSession();
+  if (!session) {
+    redirect(`/connexion?suivant=${encodeURIComponent(`/preparation-emploi/analyser/${id}`)}`);
+  }
 
   const analysis = await getAnalysis(session.userId, id);
   if (!analysis) notFound();

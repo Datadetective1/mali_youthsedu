@@ -10,6 +10,7 @@ import { Button, ButtonLink } from '@/components/ui/button';
 import { TextAreaField } from '@/components/ui/form';
 import { groupMatches } from '@/lib/engine/matching';
 import { saveAnalysisAnswersAction } from '@/app/actions/jobs';
+import { format } from '@/lib/i18n/format';
 
 /**
  * Renders the analysis.
@@ -319,7 +320,9 @@ function ReadinessPanel({ t, comparison }: { t: Dictionary; comparison: JobCompa
 
         <div className="mt-4 flex flex-wrap items-baseline gap-3">
           <p className="text-4xl font-bold tabular-nums text-brand-800">{readiness.score}</p>
-          <p className="text-sand-600">{t.analyzer.readiness.scoreOf(readiness.score)}</p>
+          <p className="text-sand-600">
+            {format(t.analyzer.readiness.scoreOf, { score: readiness.score })}
+          </p>
           <Badge
             tone={
               readiness.band === 'high' ? 'success' : readiness.band === 'medium' ? 'accent' : 'warning'

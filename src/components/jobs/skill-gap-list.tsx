@@ -6,6 +6,7 @@ import type { SkillGapEntry } from '@/lib/types';
 import { Badge, Card, CardBody } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { setSkillGapStatusAction } from '@/app/actions/jobs';
+import { plural, type PluralMessage } from '@/lib/i18n/format';
 
 type Gap = SkillGapEntry & { pathName: string | null };
 type Status = SkillGapEntry['status'];
@@ -16,7 +17,7 @@ export function SkillGapList({
 }: {
   gaps: Gap[];
   labels: {
-    frequency: (n: number) => string;
+    frequencyTemplate: PluralMessage;
     statusTodo: string;
     statusLearning: string;
     statusAddressed: string;
@@ -54,7 +55,7 @@ export function SkillGapList({
                     {/* Frequency is the whole point: one advert is noise, three
                         is a priority. */}
                     <p className="mt-0.5 text-sm text-sand-600">
-                      {labels.frequency(gap.occurrences)}
+                      {plural(labels.frequencyTemplate, gap.occurrences)}
                     </p>
                   </div>
                   <Badge

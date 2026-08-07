@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getDictionary } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { listAnalyses, listSkillGaps } from '@/lib/db/repository';
 import { pathById } from '@/content/paths';
 import { Breadcrumb, PageHeader, PageShell } from '@/components/layout/page';
 import { EmptyState } from '@/components/ui';
 import { ButtonLink } from '@/components/ui/button';
 import { SkillGapList } from '@/components/jobs/skill-gap-list';
+import { plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -15,7 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SkillGapsPage() {
   const t = await getDictionary();
-  const session = await requireSession('/preparation-emploi/ecarts');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/preparation-emploi/ecarts')}`);
 
   const [gaps, analyses] = await Promise.all([
     listSkillGaps(session.userId),
@@ -35,7 +38,7 @@ export default async function SkillGapsPage() {
       <PageHeader
         title={t.gaps.title}
         description={t.gaps.intro}
-        eyebrow={analyses.length > 0 ? t.gaps.fromAnalyses(analyses.length) : undefined}
+        eyebrow={analyses.length > 0 ? plural(t.gaps.fromAnalyses, analyses.length) : undefined}
       />
 
       {gaps.length === 0 ? (
@@ -52,7 +55,7 @@ export default async function SkillGapsPage() {
             pathName: gap.pathId ? (pathById.get(gap.pathId)?.name ?? null) : null,
           }))}
           labels={{
-            frequency: t.gaps.frequency,
+            frequencyTemplate: t.gaps.frequency,
             statusTodo: t.gaps.statusTodo,
             statusLearning: t.gaps.statusLearning,
             statusAddressed: t.gaps.statusAddressed,

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getDictionary, formatDate, getLocale } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { getPreferences, getPrimaryRoadmap, getWeeklyPlan } from '@/lib/db/repository';
 import { pathById } from '@/content/paths';
 import { PageHeader, PageShell } from '@/components/layout/page';
@@ -10,6 +11,7 @@ import { WeeklyBoard } from '@/components/weekly/weekly-board';
 import { GeneratePlanButton } from '@/components/weekly/generate-plan-button';
 import { SaveOfflineButton } from '@/components/offline/save-offline-button';
 import { startOfIsoWeek } from '@/lib/utils';
+import { format, plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -19,7 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function WeeklyPlanPage() {
   const t = await getDictionary();
   const locale = await getLocale();
-  const session = await requireSession('/plan-semaine');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/plan-semaine')}`);
   const weekStart = startOfIsoWeek(new Date());
 
   const [roadmap, preferences, plan] = await Promise.all([
@@ -47,9 +50,9 @@ export default async function WeeklyPlanPage() {
     <PageShell>
       <PageHeader
         title={t.weekly.title}
-        description={t.weekly.weekOf(
-          formatDate(weekStart, locale, { day: 'numeric', month: 'long', year: 'numeric' }),
-        )}
+        description={format(t.weekly.weekOf, {
+          date: formatDate(weekStart, locale, { day: 'numeric', month: 'long', year: 'numeric' }),
+        })}
         actions={
           <SaveOfflineButton
             urls={['/plan-semaine']}
@@ -83,7 +86,7 @@ export default async function WeeklyPlanPage() {
               dayLabels: t.weekly.dayLabels,
               tasks: t.weekly.tasks,
               totalTime: t.weekly.totalTime,
-              doneCount: t.weekly.doneCount,
+              doneCountTemplate: t.weekly.doneCount,
               weekComplete: t.weekly.weekComplete,
               regenerate: t.weekly.regenerate,
               regenerateWarning: t.weekly.regenerateWarning,
@@ -93,7 +96,7 @@ export default async function WeeklyPlanPage() {
               downloadHint: t.weekly.downloadHint,
               moveTo: t.weekly.moveTo,
               working: t.actions.loading,
-              offlineQueued: t.offline.pendingChanges(1),
+              offlineQueued: plural(t.offline.pendingChanges, 1),
               kinds: {
                 lecture: 'Lecture',
                 pratique: 'Pratique',

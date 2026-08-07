@@ -17,6 +17,7 @@ export interface StagePanelLabels {
   skills: string;
   resources: string;
   practicalExercise: string;
+  stageTasks: string;
   checklist: string;
   reflection: string;
   reflectionHint: string;
@@ -96,13 +97,26 @@ export function StagePanel({
     });
 
     startTransition(async () => {
-      const result = await setItemCompletionAction({
-        pathId,
-        stageId: stage.id,
-        itemId,
-        done,
-      });
-      if (!result.ok) {
+      /*
+       * A server action REJECTS when the network is down — it does not return
+       * a failure result. Without this catch the queue never fills and the
+       * completion is silently lost, which is the exact failure the offline
+       * queue exists to prevent.
+       */
+      let failed = false;
+      try {
+        const result = await setItemCompletionAction({
+          pathId,
+          stageId: stage.id,
+          itemId,
+          done,
+        });
+        failed = !result.ok;
+      } catch {
+        failed = true;
+      }
+
+      if (failed) {
         queueOperation({
           type: done ? 'complete-item' : 'uncomplete-item',
           pathId,
@@ -172,7 +186,7 @@ export function StagePanel({
       </Card>
 
       {/* ------------------------------------------------------------- Tasks */}
-      <section aria-label={labels.checklist}>
+      <section aria-label={labels.stageTasks}>
         <ul className="divide-y divide-sand-200 rounded-[--radius-card] border border-sand-200 bg-white">
           {stage.items.map((item) => {
             const isDone = completed.has(item.id);

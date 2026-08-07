@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CheckboxCardGroup, RadioCardGroup } from '@/components/ui/form';
 import { Notice, ProgressBar } from '@/components/ui';
 import { saveOnboardingAction } from '@/app/actions/account';
+import { format } from '@/lib/i18n/format';
 
 type Answers = Partial<OnboardingAnswers>;
 
@@ -80,7 +81,7 @@ export function OnboardingWizard({
           label={labels.progressLabel}
           showValue={false}
         />
-        <p className="mt-1 text-sm text-sand-600">{labels.stepOf(index + 1, steps.length)}</p>
+        <p className="mt-1 text-sm text-sand-600">{format(labels.stepOf, { current: index + 1, total: steps.length })}</p>
       </div>
 
       <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">

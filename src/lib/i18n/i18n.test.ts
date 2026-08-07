@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dictionaryFor, formatDate, formatNumber } from './index';
+import { format, plural } from './format';
 import { locales } from './config';
 import { fr } from './dictionaries/fr';
 
@@ -31,9 +32,31 @@ describe('dictionaries', () => {
     expect(dictionaryFor('en').interview.title).toBe(fr.interview.title);
   });
 
-  it('keeps formatter functions callable after merging', () => {
-    expect(dictionaryFor('en').explore.stagesLabel(3)).toBe('3 étapes');
-    expect(dictionaryFor('fr').a11y.progressOf(2, 5)).toBe('2 sur 5 terminé');
+  it('keeps message templates intact after merging', () => {
+    expect(plural(dictionaryFor('en').explore.stagesLabel, 3)).toBe('3 étapes');
+    expect(format(dictionaryFor('fr').a11y.progressOf, { done: 2, total: 5 })).toBe(
+      '2 sur 5 terminé',
+    );
+  });
+
+  it('keeps the whole dictionary serializable', () => {
+    // Non-negotiable: a server component must be able to hand `t` to a client
+    // component. A function anywhere in the tree throws at runtime, and the
+    // page that does it may not be the one under test.
+    function findFunction(value: unknown, path: string): string | null {
+      if (typeof value === 'function') return path;
+      if (typeof value !== 'object' || value === null) return null;
+      for (const [key, child] of Object.entries(value)) {
+        const found = findFunction(child, path ? `${path}.${key}` : key);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    for (const locale of locales) {
+      expect(findFunction(dictionaryFor(locale), ''), `locale ${locale}`).toBeNull();
+    }
+    expect(() => JSON.stringify(dictionaryFor('fr'))).not.toThrow();
   });
 
   it('never mutates the French reference', () => {

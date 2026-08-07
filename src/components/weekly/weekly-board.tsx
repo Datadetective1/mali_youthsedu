@@ -22,12 +22,13 @@ import {
 } from '@/app/actions/learning';
 import { queueOperation } from '@/lib/offline/client';
 import { cn, formatMinutes } from '@/lib/utils';
+import { plural, type PluralMessage } from '@/lib/i18n/format';
 
 export interface WeeklyLabels {
   dayLabels: string[];
   tasks: string;
   totalTime: string;
-  doneCount: (done: number, total: number) => string;
+  doneCountTemplate: PluralMessage;
   weekComplete: string;
   regenerate: string;
   regenerateWarning: string;
@@ -74,8 +75,17 @@ export function WeeklyBoard({
     );
 
     startTransition(async () => {
-      const result = await setTaskCompletionAction(taskId, complete);
-      if (!result.ok) {
+      // Server actions reject on network failure rather than returning a
+      // result, so the offline path has to catch as well as check.
+      let failed = false;
+      try {
+        const result = await setTaskCompletionAction(taskId, complete);
+        failed = !result.ok;
+      } catch {
+        failed = true;
+      }
+
+      if (failed) {
         queueOperation({
           type: complete ? 'complete-task' : 'uncomplete-task',
           taskId,
@@ -91,8 +101,15 @@ export function WeeklyBoard({
       current.map((task) => (task.id === taskId ? { ...task, day } : task)),
     );
     startTransition(async () => {
-      const result = await moveTaskAction(taskId, day);
-      if (!result.ok) {
+      let failed = false;
+      try {
+        const result = await moveTaskAction(taskId, day);
+        failed = !result.ok;
+      } catch {
+        failed = true;
+      }
+
+      if (failed) {
         queueOperation({ type: 'move-task', taskId, day, at: new Date().toISOString() });
         setQueued(true);
       }
@@ -176,7 +193,9 @@ export function WeeklyBoard({
         <Card className="print-avoid-break">
           <CardBody>
             <ProgressBar value={done} total={tasks.length} label={labels.tasks} tone="accent" />
-            <p className="mt-2 text-sm text-sand-600">{labels.doneCount(done, tasks.length)}</p>
+            <p className="mt-2 text-sm text-sand-600">
+              {plural(labels.doneCountTemplate, done, { done, total: tasks.length })}
+            </p>
           </CardBody>
         </Card>
         <Card className="print-avoid-break">

@@ -1,19 +1,23 @@
 import Link from 'next/link';
 import { brand } from '@/config';
 import { getDictionary } from '@/lib/i18n';
-import { requireAdmin } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import { SignOutButton } from '@/components/profile/sign-out-button';
 
 /**
  * Admin shell.
  *
  * Separate from the main site layout: no bottom navigation, no marketing
- * footer, and `requireAdmin()` gates every route beneath it. The `/admin/refus`
- * page is the only exception and lives outside this layout.
+ * footer, and the session guard below gates every route beneath it.
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = await getDictionary();
-  const session = await requireAdmin();
+  const session = await getSession();
+  // `/acces-refuse` lives outside /admin: this layout guards every route
+  // beneath it, so redirecting to a page nested here would loop forever.
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/admin')}`);
+  if (!session.isAdmin) redirect('/acces-refuse');
 
   const links = [
     { href: '/admin', label: t.admin.tabs.overview },

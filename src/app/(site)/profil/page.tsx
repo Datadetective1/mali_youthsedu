@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getDictionary, formatDate, getLocale } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { getOnboarding, getPreferences, getProfile } from '@/lib/db/repository';
 import { Breadcrumb, PageHeader, PageShell } from '@/components/layout/page';
 import { Card, CardBody, DefinitionList, Notice, Section } from '@/components/ui';
@@ -17,7 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ProfilePage() {
   const t = await getDictionary();
   const locale = await getLocale();
-  const session = await requireSession('/profil');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/profil')}`);
 
   const [profile, preferences, onboarding] = await Promise.all([
     getProfile(session.userId),

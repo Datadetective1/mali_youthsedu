@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -10,7 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { getDictionary, formatDate, getLocale } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import {
   getPrimaryRoadmap,
   getWeeklyPlan,
@@ -33,6 +34,7 @@ import { Badge, Card, CardBody, EmptyState, Notice, ProgressBar, Section } from 
 import { ButtonLink } from '@/components/ui/button';
 import { InstallPrompt } from '@/components/offline/install-prompt';
 import { createRng, startOfIsoWeek } from '@/lib/utils';
+import { format } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -42,7 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DashboardPage() {
   const t = await getDictionary();
   const locale = await getLocale();
-  const session = await requireSession('/tableau-de-bord');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/tableau-de-bord')}`);
   const weekStart = startOfIsoWeek(new Date());
 
   const [
@@ -106,7 +109,7 @@ export default async function DashboardPage() {
   return (
     <PageShell width="wide">
       <PageHeader
-        title={t.dashboard.greeting(session.displayName || '')}
+        title={format(t.dashboard.greeting, { name: session.displayName || '' })}
         description={t.dashboard.subtitle}
       />
 
@@ -148,7 +151,7 @@ export default async function DashboardPage() {
                     </p>
                     <p className="mt-1 font-medium text-brand-900">{nextItem.title}</p>
                     <p className="mt-0.5 text-sm text-brand-800">
-                      {t.roadmap.stageLabel(nextStage.order)} · {nextStage.name}
+                      {format(t.roadmap.stageLabel, { n: nextStage.order })} · {nextStage.name}
                     </p>
                     <ButtonLink href="/mon-parcours" size="sm" className="mt-3">
                       {t.dashboard.resumeAction}
@@ -176,7 +179,9 @@ export default async function DashboardPage() {
                   </div>
                   <Badge tone="neutral">
                     <CalendarDays aria-hidden className="size-3" />
-                    {t.weekly.weekOf(formatDate(weekStart, locale, { day: 'numeric', month: 'long' }))}
+                    {format(t.weekly.weekOf, {
+                      date: formatDate(weekStart, locale, { day: 'numeric', month: 'long' }),
+                    })}
                   </Badge>
                 </div>
 

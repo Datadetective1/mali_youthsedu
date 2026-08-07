@@ -13,6 +13,7 @@ import {
   saveInterviewAnswerAction,
   saveStarExampleAction,
 } from '@/app/actions/jobs';
+import { plural } from '@/lib/i18n/format';
 
 type Tab = 'checklist' | 'questions' | 'star' | 'confidence' | 'askThem' | 'followUp';
 
@@ -81,7 +82,7 @@ export function InterviewWorkspace({
                 checklist={checklist}
                 initialDone={checklistStates[checklist.id] ?? []}
                 isSignedIn={isSignedIn}
-                countLabel={i.checklists.itemsDone}
+                countLabelTemplate={i.checklists.itemsDone}
               />
             ))}
           </div>
@@ -109,7 +110,7 @@ export function InterviewWorkspace({
                   checklist={checklist}
                   initialDone={checklistStates[checklist.id] ?? []}
                   isSignedIn={isSignedIn}
-                  countLabel={i.checklists.itemsDone}
+                  countLabelTemplate={i.checklists.itemsDone}
                 />
               ))}
             <Notice tone="warning" title={i.askThem.avoid}>
@@ -179,7 +180,7 @@ function QuestionBank({
             ))}
           </select>
         </label>
-        <Badge tone="brand">{q.answeredCount(answered)}</Badge>
+        <Badge tone="brand">{plural(q.answeredCount, answered)}</Badge>
       </div>
 
       <Notice tone="info">{q.noAudioNotice}</Notice>

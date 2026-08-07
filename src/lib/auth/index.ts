@@ -1,6 +1,6 @@
+import 'server-only';
 import { cookies } from 'next/headers';
 import { randomUUID } from 'node:crypto';
-import { redirect } from 'next/navigation';
 import { adminConfig, authConfig, dataConfig, isProduction } from '@/config';
 import { localStore } from '@/lib/db/local-store';
 import { createRequestClient } from '@/lib/db/supabase-store';
@@ -9,8 +9,16 @@ import { createSessionToken, hashPassword, readSessionToken, verifyPassword } fr
 /**
  * Authentication, unified across both drivers.
  *
- * The rest of the application only ever calls `getSession()` / `requireSession()`
- * and never learns which driver is active.
+ * The rest of the application only ever calls `getSession()` and never learns
+ * which driver is active.
+ *
+ * There is deliberately no `requireSession()` helper here. Pages and layouts
+ * call `getSession()` and then `redirect()` themselves, because `redirect()`
+ * interrupts control flow reliably when called directly inside a page or
+ * layout, and did not when the throw had to propagate out of a shared async
+ * helper in this Next 16 / Turbopack setup — which turned every signed-out
+ * visit to a protected page into a 500 instead of a redirect. Two lines at the
+ * call site is a small price for a guard that actually guards.
  */
 
 export interface Session {
@@ -88,22 +96,6 @@ async function getLocalSession(): Promise<Session | null> {
   };
 }
 
-/** Redirects to sign-in when there is no session. Use in server components. */
-export async function requireSession(returnTo?: string): Promise<Session> {
-  const session = await getSession();
-  if (!session) {
-    const target = returnTo ? `?suivant=${encodeURIComponent(returnTo)}` : '';
-    redirect(`/connexion${target}`);
-  }
-  return session;
-}
-
-export async function requireAdmin(): Promise<Session> {
-  const session = await getSession();
-  if (!session) redirect('/connexion?suivant=%2Fadmin');
-  if (!session.isAdmin) redirect('/admin/refus');
-  return session;
-}
 
 // ---------------------------------------------------------------------------
 // Sign up / sign in / sign out

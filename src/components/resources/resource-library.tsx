@@ -8,12 +8,13 @@ import { EmptyState, Notice } from '@/components/ui';
 import { ResourceCard } from './resource-card';
 import { toggleResourceAction } from '@/app/actions/learning';
 import { normalizeText } from '@/lib/utils';
+import { plural, type PluralMessage } from '@/lib/i18n/format';
 
 export interface LibraryLabels {
   searchPlaceholder: string;
   filters: string;
   reset: string;
-  count: (n: number) => string;
+  countTemplate: PluralMessage;
   noResults: string;
   noResultsHint: string;
   save: string;
@@ -207,7 +208,7 @@ export function ResourceLibrary({
       {!isSignedIn ? <Notice tone="info">{labels.guestNotice}</Notice> : null}
 
       <p role="status" className="text-sm text-sand-600">
-        {labels.count(filtered.length)}
+        {plural(labels.countTemplate, filtered.length)}
       </p>
 
       {filtered.length === 0 ? (

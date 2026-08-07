@@ -130,7 +130,7 @@ export const jobs = {
 
     readiness: {
       title: 'Indice de préparation',
-      scoreOf: (score: number) => `${score} sur 100`,
+      scoreOf: '{score} sur 100',
       disclaimer:
         'Cet indice mesure votre préparation à cette candidature. Il ne prédit pas et ne garantit pas un recrutement. Un employeur décide sur bien d’autres critères.',
       howItWorks: 'Comment cet indice est calculé',
@@ -242,7 +242,7 @@ export const jobs = {
         'Un recruteur peut interroger n’importe quelle ligne de votre CV. Vous devez pouvoir défendre chacune d’elles.',
       companyResearchTitle: 'Recherche sur l’entreprise',
       logisticsTitle: 'Aspects pratiques',
-      itemsDone: (done: number, total: number) => `${done} / ${total}`,
+      itemsDone: '{done} / {total}',
     },
     questions: {
       title: 'Questions d’entretien',
@@ -266,7 +266,7 @@ export const jobs = {
       myAnswer: 'Ma réponse',
       myAnswerPlaceholder: 'Écrivez votre réponse comme vous la diriez à voix haute…',
       answerSaved: 'Réponse enregistrée',
-      answeredCount: (n: number) => (n === 1 ? '1 réponse préparée' : `${n} réponses préparées`),
+      answeredCount: { one: '1 réponse préparée', other: '{n} réponses préparées' },
       practiceHint:
         'Écrivez d’abord, puis lisez à voix haute. Chronométrez : une bonne réponse dure une à deux minutes.',
       noAudioNotice:
@@ -420,7 +420,10 @@ export const jobs = {
     noExperienceBody:
       'C’est le cas de la plupart des candidats au premier emploi. Renseignez plutôt vos projets pratiques, votre bénévolat, vos travaux scolaires et le travail réalisé en famille. Ce sont des expériences, à condition de les décrire précisément.',
     importProjects: 'Importer mes projets pratiques',
-    importedProjects: (n: number) => `${n} projet(s) ajouté(s) depuis votre portfolio.`,
+    importedProjects: {
+      one: '1 projet ajouté depuis votre portfolio.',
+      other: '{n} projets ajoutés depuis votre portfolio.',
+    },
     masteryTitle: 'Maîtriser mon CV',
     masteryIntro:
       'Pour chaque ligne de votre CV, vous devez pouvoir répondre à trois questions. Entraînez-vous ici.',
@@ -474,8 +477,8 @@ export const jobs = {
     intro:
       'Regroupe les exigences non couvertes détectées dans les offres que vous avez analysées, et ce que vous pouvez faire pour chacune.',
     empty: 'Analysez une offre pour identifier vos écarts.',
-    fromAnalyses: (n: number) => `Issu de ${n} offre(s) analysée(s)`,
-    frequency: (n: number) => (n === 1 ? 'Demandé dans 1 offre' : `Demandé dans ${n} offres`),
+    fromAnalyses: { one: 'Issu de 1 offre analysée', other: 'Issu de {n} offres analysées' },
+    frequency: { one: 'Demandé dans 1 offre', other: 'Demandé dans {n} offres' },
     actionLearn: 'Apprendre',
     actionExplain: 'Préparer une explication',
     statusTodo: 'À traiter',

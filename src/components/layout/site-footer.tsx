@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { brand } from '@/config';
 import { getDictionary } from '@/lib/i18n';
+import { format } from '@/lib/i18n/format';
 
 export async function SiteFooter() {
   const t = await getDictionary();
@@ -68,7 +69,7 @@ export async function SiteFooter() {
         <div className="mt-8 space-y-2 border-t border-sand-200 pt-6 text-sm text-sand-600">
           <p className="font-medium text-sand-700">{t.footer.noGuarantee}</p>
           <p>{t.footer.dataPromise}</p>
-          <p className="pt-2 text-xs text-sand-500">{t.footer.rights(year)}</p>
+          <p className="pt-2 text-xs text-sand-500">{format(t.footer.rights, { year })}</p>
         </div>
       </div>
     </footer>

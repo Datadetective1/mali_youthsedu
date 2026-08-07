@@ -28,7 +28,7 @@ export default async function ResourcesPage() {
           searchPlaceholder: t.resources.searchPlaceholder,
           filters: t.resources.filters,
           reset: t.actions.reset,
-          count: t.resources.countLabel,
+          countTemplate: t.resources.countLabel,
           noResults: t.states.noResults,
           noResultsHint: t.states.noResultsHint,
           save: t.resources.saveResource,

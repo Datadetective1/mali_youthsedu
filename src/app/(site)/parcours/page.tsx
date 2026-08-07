@@ -8,6 +8,7 @@ import { PageHeader, PageShell } from '@/components/layout/page';
 import { PathCard } from '@/components/path-card';
 import { ButtonLink } from '@/components/ui/button';
 import { Notice } from '@/components/ui';
+import { plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -41,7 +42,7 @@ export default async function ExplorePage() {
             <li key={path.id}>
               <PathCard
                 path={path}
-                stagesLabel={t.explore.stagesLabel(path.stages.length)}
+                stagesLabel={plural(t.explore.stagesLabel, path.stages.length)}
                 progress={session && done > 0 ? { done, total } : undefined}
               />
             </li>

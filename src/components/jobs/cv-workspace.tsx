@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { TextAreaField, TextField } from '@/components/ui/form';
 import { BulletList, Card, CardBody, Notice, Section } from '@/components/ui';
 import { saveCvAction } from '@/app/actions/jobs';
+import { plural } from '@/lib/i18n/format';
 
 type Cv = Omit<CvProfile, 'id' | 'userId' | 'updatedAt'>;
 
@@ -407,7 +408,7 @@ export function CvWorkspace({
 
           {imported !== null ? (
             <Notice tone="success" className="mt-3" role="status">
-              {c.importedProjects(imported)}
+              {plural(c.importedProjects, imported)}
             </Notice>
           ) : null}
 

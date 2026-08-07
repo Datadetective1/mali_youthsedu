@@ -99,8 +99,10 @@ export const common = {
     saveForOffline: 'Enregistrer hors ligne',
     removeFromOffline: 'Retirer du hors ligne',
     savingForOffline: 'Enregistrement hors ligne…',
-    pendingChanges: (count: number) =>
-      count === 1 ? '1 modification en attente de synchronisation' : `${count} modifications en attente de synchronisation`,
+    pendingChanges: {
+      one: '1 modification en attente de synchronisation',
+      other: '{n} modifications en attente de synchronisation',
+    },
     syncNow: 'Synchroniser maintenant',
     syncing: 'Synchronisation…',
     syncDone: 'Tout est synchronisé',
@@ -119,11 +121,11 @@ export const common = {
     requiredField: 'Ce champ est obligatoire.',
     invalidEmail: 'Adresse e-mail invalide.',
     passwordTooShort: 'Le mot de passe doit contenir au moins 8 caractères.',
-    tooLong: (max: number) => `Ce texte dépasse la limite de ${max} caractères.`,
-    tooShort: (min: number) => `Ce texte doit contenir au moins ${min} caractères.`,
+    tooLong: 'Ce texte dépasse la limite de {max} caractères.',
+    tooShort: 'Ce texte doit contenir au moins {min} caractères.',
     selectOne: 'Sélectionnez une option.',
     genericError: 'Veuillez corriger les champs indiqués.',
-    charactersLeft: (n: number) => `${n} caractères restants`,
+    charactersLeft: '{n} caractères restants',
     errorSummaryTitle: 'Le formulaire contient des erreurs',
   },
   a11y: {
@@ -134,7 +136,7 @@ export const common = {
     openMenu: 'Ouvrir le menu',
     closeMenu: 'Fermer le menu',
     externalLink: 'ouvre un nouvel onglet',
-    progressOf: (done: number, total: number) => `${done} sur ${total} terminé`,
+    progressOf: '{done} sur {total} terminé',
     currentPage: 'Page actuelle',
   },
   nav: {
@@ -167,7 +169,7 @@ export const common = {
     noGuarantee:
       'Cette plateforme ne garantit ni emploi, ni revenu, ni résultat de recrutement.',
     dataPromise: 'Nous ne vendons aucune donnée personnelle et n’affichons aucune publicité ciblée.',
-    rights: (year: number) => `© ${year}. Contenu éducatif réutilisable, sauf mention contraire.`,
+    rights: '© {year}. Contenu éducatif réutilisable, sauf mention contraire.',
   },
   ai: {
     disclosureShort: 'Analyse automatique',

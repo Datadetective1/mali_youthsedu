@@ -22,14 +22,23 @@ export default defineConfig({
 
   projects: [
     {
+      // Creates the accounts once and stores their signed-in state, so tests
+      // never have to sign in repeatedly and trip the app's own rate limit.
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+    },
+    {
       // Primary target: a modest Android phone. Desktop is the secondary case.
       name: 'mobile',
       use: { ...devices['Pixel 5'] },
+      dependencies: ['setup'],
+      testIgnore: /auth\.setup\.ts/,
     },
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
-      testIgnore: /mobile-only/,
+      dependencies: ['setup'],
+      testIgnore: /auth\.setup\.ts/,
     },
   ],
 

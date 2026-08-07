@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { CalendarClock, Sparkles } from 'lucide-react';
 import { getDictionary } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { getOnboarding, getPreferences } from '@/lib/db/repository';
 import { recommendPaths } from '@/lib/engine/recommendation';
 import { pathById } from '@/content/paths';
@@ -11,6 +11,7 @@ import { Badge, BulletList, Card, CardBody, Notice, Section } from '@/components
 import { ButtonLink } from '@/components/ui/button';
 import { PathCard } from '@/components/path-card';
 import { AcceptRecommendation } from '@/components/onboarding/accept-recommendation';
+import { format, plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -19,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RecommendationPage() {
   const t = await getDictionary();
-  const session = await requireSession('/recommandation');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/recommandation')}`);
 
   const answers = await getOnboarding(session.userId);
   if (!answers) redirect('/bienvenue');
@@ -49,7 +51,7 @@ export default async function RecommendationPage() {
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="space-y-6">
-          <PathCard path={primary} stagesLabel={t.explore.stagesLabel(primary.stages.length)} />
+          <PathCard path={primary} stagesLabel={plural(t.explore.stagesLabel, primary.stages.length)} />
 
           <Card>
             <CardBody>
@@ -71,7 +73,7 @@ export default async function RecommendationPage() {
             <Section title={t.recommendation.supportingLabel} description={t.recommendation.supportingWhy}>
               <PathCard
                 path={supporting}
-                stagesLabel={t.explore.stagesLabel(supporting.stages.length)}
+                stagesLabel={plural(t.explore.stagesLabel, supporting.stages.length)}
                 compact
               />
             </Section>
@@ -86,10 +88,10 @@ export default async function RecommendationPage() {
                 {t.recommendation.scheduleTitle}
               </h2>
               <p className="mt-2 text-sand-700">
-                {t.recommendation.scheduleBody(
-                  preferences.hoursPerWeek,
-                  recommendation.estimatedWeeks,
-                )}
+                {format(t.recommendation.scheduleBody, {
+                  hours: preferences.hoursPerWeek,
+                  weeks: recommendation.estimatedWeeks,
+                })}
               </p>
 
               <div className="mt-5">
@@ -125,7 +127,7 @@ export default async function RecommendationPage() {
                 <li key={pathId}>
                   <PathCard
                     path={path}
-                    stagesLabel={t.explore.stagesLabel(path.stages.length)}
+                    stagesLabel={plural(t.explore.stagesLabel, path.stages.length)}
                     compact
                   />
                 </li>

@@ -21,6 +21,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { Badge, BulletList, Card, CardBody, Section } from '@/components/ui';
 import { PageShell } from '@/components/layout/page';
 import { PathCard } from '@/components/path-card';
+import { plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -150,7 +151,7 @@ export default async function LandingPage() {
               <PathCard
                 key={path.id}
                 path={path}
-                stagesLabel={t.explore.stagesLabel(path.stages.length)}
+                stagesLabel={plural(t.explore.stagesLabel, path.stages.length)}
               />
             ))}
           </div>

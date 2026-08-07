@@ -38,7 +38,7 @@ export default async function ApplicationChecklistPage() {
         checklist={checklist}
         initialDone={done}
         isSignedIn={Boolean(session)}
-        countLabel={t.interview.checklists.itemsDone}
+        countLabelTemplate={t.interview.checklists.itemsDone}
       />
 
       {done.length === checklist.items.length ? (

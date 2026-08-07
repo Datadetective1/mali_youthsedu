@@ -168,8 +168,8 @@ export const marketing = {
     guestNotice:
       'Vous explorez sans compte. Créez-en un pour enregistrer votre progression et recevoir un plan hebdomadaire.',
     guestCta: 'Obtenir une recommandation',
-    stagesLabel: (n: number) => (n === 1 ? '1 étape' : `${n} étapes`),
-    projectsLabel: (n: number) => (n === 1 ? '1 projet pratique' : `${n} projets pratiques`),
+    stagesLabel: { one: '1 étape', other: '{n} étapes' },
+    projectsLabel: { one: '1 projet pratique', other: '{n} projets pratiques' },
     startPath: 'Commencer ce parcours',
     viewPath: 'Voir le détail',
     whoIsItFor: 'Pour qui ?',

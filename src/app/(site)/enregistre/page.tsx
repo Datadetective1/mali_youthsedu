@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getDictionary, formatDate, getLocale } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { listNotes, listSavedResources } from '@/lib/db/repository';
 import { resourceById } from '@/content/resources';
 import { pathById } from '@/content/paths';
@@ -19,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SavedPage() {
   const t = await getDictionary();
   const locale = await getLocale();
-  const session = await requireSession('/enregistre');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/enregistre')}`);
 
   const [saved, notes] = await Promise.all([
     listSavedResources(session.userId),

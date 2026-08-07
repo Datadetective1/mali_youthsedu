@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { CheckCircle2, Lock } from 'lucide-react';
 import { getDictionary } from '@/lib/i18n';
-import { requireSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { listNotes, listProgress, listRoadmaps } from '@/lib/db/repository';
 import { computePathProgress } from '@/lib/engine/progress';
 import { pathById } from '@/content/paths';
@@ -13,6 +14,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { StagePanel } from '@/components/roadmap/stage-panel';
 import { SaveOfflineButton } from '@/components/offline/save-offline-button';
 import { formatMinutes } from '@/lib/utils';
+import { format, plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -25,7 +27,8 @@ export default async function MyPathPage({
   searchParams: Promise<{ parcours?: string }>;
 }) {
   const t = await getDictionary();
-  const session = await requireSession('/mon-parcours');
+  const session = await getSession();
+  if (!session) redirect(`/connexion?suivant=${encodeURIComponent('/mon-parcours')}`);
   const { parcours } = await searchParams;
 
   const [roadmaps, progress, notes] = await Promise.all([
@@ -68,11 +71,12 @@ export default async function MyPathPage({
   );
 
   const stageLabels = {
-    stageLabel: t.roadmap.stageLabel(1),
+    stageLabel: t.roadmap.stageLabel,
     objective: t.roadmap.objective,
     skills: t.roadmap.skillsDeveloped,
     resources: t.roadmap.resources,
     practicalExercise: t.roadmap.practicalExercise,
+    stageTasks: t.roadmap.stageTasks,
     checklist: t.roadmap.checklist,
     reflection: t.roadmap.reflection,
     reflectionHint: t.roadmap.reflectionHint,
@@ -93,7 +97,7 @@ export default async function MyPathPage({
     unlockAnyway: t.roadmap.unlockAnyway,
     progressLabel: t.labels.progress,
     deliverable: t.projects.deliverable,
-    offlineQueued: t.offline.pendingChanges(1),
+    offlineQueued: plural(t.offline.pendingChanges, 1),
   };
 
   return (
@@ -176,7 +180,7 @@ export default async function MyPathPage({
                         <Lock aria-hidden className="size-4 text-sand-400" />
                       ) : null}
                       <span className="text-sm font-semibold text-brand-700">
-                        {t.roadmap.stageLabel(stage.order)}
+                        {format(t.roadmap.stageLabel, { n: stage.order })}
                       </span>
                       <span>{stage.name}</span>
                       <span className="text-sm font-normal text-sand-500">

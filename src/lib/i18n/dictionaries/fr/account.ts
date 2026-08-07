@@ -41,7 +41,7 @@ export const account = {
     title: 'Quelques questions pour vous orienter',
     intro:
       'Environ trois minutes. Toutes les questions sensibles sont facultatives, et vous pourrez tout modifier plus tard.',
-    stepOf: (current: number, total: number) => `Étape ${current} sur ${total}`,
+    stepOf: 'Étape {current} sur {total}',
     progressLabel: 'Progression du questionnaire',
     skipQuestion: 'Je préfère ne pas répondre',
     finishAction: 'Voir ma recommandation',
@@ -189,8 +189,8 @@ export const account = {
     supportingWhy: 'Ce parcours complémentaire renforce des bases qui vous serviront partout.',
     whyTitle: 'Pourquoi ce parcours ?',
     scheduleTitle: 'Votre rythme',
-    scheduleBody: (hours: number, weeks: number) =>
-      `À raison d’environ ${hours} h par semaine, comptez à peu près ${weeks} semaines pour le parcours principal.`,
+    scheduleBody:
+      'À raison d’environ {hours} h par semaine, comptez à peu près {weeks} semaines pour le parcours principal.',
     acceptAction: 'Commencer ce parcours',
     chooseAnother: 'Choisir un autre parcours',
     alternativesTitle: 'Autres parcours envisageables',

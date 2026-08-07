@@ -22,6 +22,7 @@ import {
 import { StartPathButton } from '@/components/roadmap/start-path-button';
 import { formatMinutes } from '@/lib/utils';
 import { PathIcon } from '@/components/path-card';
+import { format, plural } from '@/lib/i18n/format';
 
 export function generateStaticParams() {
   return careerPaths.map((path) => ({ slug: path.slug }));
@@ -91,12 +92,12 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
         items={[
           {
             term: t.explore.totalTime,
-            description: `${path.estimatedHours} h · ${t.explore.stagesLabel(path.stages.length)}`,
+            description: `${path.estimatedHours} h · ${plural(t.explore.stagesLabel, path.stages.length)}`,
           },
           { term: t.labels.level, description: t.levels[path.level] },
           {
             term: t.nav.projects,
-            description: t.explore.projectsLabel(projects.length),
+            description: plural(t.explore.projectsLabel, projects.length),
           },
           {
             term: t.explore.prerequisites,
@@ -127,7 +128,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
                   summary={
                     <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                       <span className="text-sm font-semibold text-brand-700">
-                        {t.roadmap.stageLabel(stage.order)}
+                        {format(t.roadmap.stageLabel, { n: stage.order })}
                       </span>
                       <span>{stage.name}</span>
                       <span className="text-sm font-normal text-sand-500">
@@ -173,7 +174,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
                     {stageResources.length > 0 ? (
                       <p className="flex items-center gap-2 text-sand-600">
                         <Clock aria-hidden className="size-4" />
-                        {t.resources.countLabel(stageResources.length)}
+                        {plural(t.resources.countLabel, stageResources.length)}
                       </p>
                     ) : null}
                   </div>
