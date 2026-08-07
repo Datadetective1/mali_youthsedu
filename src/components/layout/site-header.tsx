@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -39,10 +39,17 @@ export function SiteHeader({
   const [open, setOpen] = useState(false);
   const links = publicLinks(labels);
 
-  // Close the menu on navigation — otherwise it stays open over the new page.
-  useEffect(() => {
+  /*
+   * Close the menu on navigation, otherwise it stays open over the new page.
+   *
+   * Adjusted during render rather than in an effect: an effect would paint the
+   * new page once with the old menu still covering it.
+   */
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <header

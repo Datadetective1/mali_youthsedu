@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { CloudOff, RefreshCw } from 'lucide-react';
-import { useOnlineStatus, useSyncQueue } from '@/lib/offline/client';
+import { useAutoSync, useOnlineStatus, useSyncQueue } from '@/lib/offline/client';
 
 /**
  * Connection state banner.
@@ -10,6 +9,10 @@ import { useOnlineStatus, useSyncQueue } from '@/lib/offline/client';
  * Sits above the header so it is never missed, and disappears entirely when
  * everything is fine — a permanent status bar on a 320px screen is a permanent
  * tax on the content.
+ *
+ * Also the single mount point for auto-sync: it is present on every page, so
+ * queued work replays as soon as the connection returns without the user
+ * having to find a button.
  */
 export function OfflineBanner({
   offlineLabel,
@@ -22,19 +25,12 @@ export function OfflineBanner({
 }) {
   const online = useOnlineStatus();
   const { pending, state } = useSyncQueue();
-  const [showReconnected, setShowReconnected] = useState(false);
+  useAutoSync();
 
-  useEffect(() => {
-    if (online && pending > 0) {
-      setShowReconnected(true);
-      const timer = setTimeout(() => setShowReconnected(false), 4000);
-      return () => clearTimeout(timer);
-    }
-    setShowReconnected(false);
-    return undefined;
-  }, [online, pending]);
-
-  if (online && !showReconnected) return null;
+  // Derived, not stored: the banner shows while offline, or while there is
+  // still queued work to flush. No timer, no effect, nothing to get stuck.
+  const hasPendingWork = pending > 0;
+  if (online && !hasPendingWork) return null;
 
   const syncing = state === 'syncing';
 

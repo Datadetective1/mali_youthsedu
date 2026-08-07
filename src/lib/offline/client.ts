@@ -1,39 +1,61 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import type { SyncOperation } from '@/lib/types';
+import { useCallback, useState, useSyncExternalStore } from 'react';
+import type { QueuedOperation, SyncOperation } from '@/lib/types';
 import { enqueue, flushQueue, queueLength, type FlushResult } from './queue';
 
 /**
  * Client-side offline plumbing.
  *
- * Everything here degrades: with no service worker the app still works online,
- * and with no network the queue simply grows until the connection returns.
+ * Everything here subscribes to an external system — the network, the queue in
+ * localStorage, the service worker — so it is built on `useSyncExternalStore`
+ * rather than `useEffect` + `setState`. That is not stylistic: reading external
+ * state in an effect produces a render with the wrong value first, which is how
+ * an "offline" banner flashes at someone who is perfectly online.
+ *
+ * Everything degrades: with no service worker the app still works online, and
+ * with no network the queue simply grows until connectivity returns.
  */
 
-export function useOnlineStatus(): boolean {
-  // Assume online during SSR and first paint. Rendering an "offline" banner to
-  // someone who is online is worse than the reverse.
-  const [online, setOnline] = useState(true);
+const QUEUE_CHANGED_EVENT = 'myp:queue-changed';
 
-  useEffect(() => {
-    setOnline(navigator.onLine);
-    const goOnline = () => setOnline(true);
-    const goOffline = () => setOnline(false);
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
-    return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
-    };
-  }, []);
+// ---------------------------------------------------------------------------
+// Network status
+// ---------------------------------------------------------------------------
 
-  return online;
+function subscribeToNetwork(onChange: () => void): () => void {
+  window.addEventListener('online', onChange);
+  window.addEventListener('offline', onChange);
+  return () => {
+    window.removeEventListener('online', onChange);
+    window.removeEventListener('offline', onChange);
+  };
 }
 
-export type SyncState = 'idle' | 'pending' | 'syncing' | 'error';
+export function useOnlineStatus(): boolean {
+  return useSyncExternalStore(
+    subscribeToNetwork,
+    () => navigator.onLine,
+    // Server snapshot: assume online. Rendering an offline banner to someone
+    // who is connected is worse than the reverse.
+    () => true,
+  );
+}
 
-const QUEUE_CHANGED_EVENT = 'myp:queue-changed';
+/** True once hydrated. Lets components branch on browser-only capabilities. */
+export function useIsClient(): boolean {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Queue
+// ---------------------------------------------------------------------------
+
+export type SyncState = 'idle' | 'pending' | 'syncing' | 'error';
 
 export function notifyQueueChanged(): void {
   if (typeof window !== 'undefined') {
@@ -41,13 +63,30 @@ export function notifyQueueChanged(): void {
   }
 }
 
-/** Queue an operation and tell the UI to refresh its pending count. */
+/** Queue an operation and tell every subscriber the count changed. */
 export function queueOperation(operation: SyncOperation): void {
   enqueue(operation);
   notifyQueueChanged();
 }
 
-async function sendQueue(operations: Parameters<Parameters<typeof flushQueue>[0]>[0]) {
+function subscribeToQueue(onChange: () => void): () => void {
+  window.addEventListener(QUEUE_CHANGED_EVENT, onChange);
+  window.addEventListener('storage', onChange);
+  return () => {
+    window.removeEventListener(QUEUE_CHANGED_EVENT, onChange);
+    window.removeEventListener('storage', onChange);
+  };
+}
+
+export function usePendingCount(): number {
+  return useSyncExternalStore(
+    subscribeToQueue,
+    () => queueLength(),
+    () => 0,
+  );
+}
+
+async function sendQueue(operations: QueuedOperation[]): Promise<{ applied: string[] }> {
   const response = await fetch('/api/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -62,50 +101,63 @@ export function useSyncQueue(): {
   state: SyncState;
   sync: () => Promise<FlushResult | null>;
 } {
-  const online = useOnlineStatus();
-  const [pending, setPending] = useState(0);
-  const [state, setState] = useState<SyncState>('idle');
-
-  const refresh = useCallback(() => setPending(queueLength()), []);
-
-  useEffect(() => {
-    refresh();
-    window.addEventListener(QUEUE_CHANGED_EVENT, refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener(QUEUE_CHANGED_EVENT, refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, [refresh]);
+  const pending = usePendingCount();
+  const [syncing, setSyncing] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const sync = useCallback(async () => {
-    if (queueLength() === 0) {
-      setState('idle');
-      return null;
-    }
-    setState('syncing');
+    if (queueLength() === 0) return null;
+
+    setSyncing(true);
     const result = await flushQueue(sendQueue);
-    refresh();
-    setState(result.remaining > 0 ? 'error' : 'idle');
+    setSyncing(false);
+    setFailed(result.remaining > 0);
+    notifyQueueChanged();
     return result;
-  }, [refresh]);
+  }, []);
 
-  // Replay as soon as the connection returns. This is the whole point of the
-  // queue, so it must not depend on the user noticing a button.
-  useEffect(() => {
-    if (online && pending > 0 && state !== 'syncing') {
-      void sync();
-    }
-    // `state` is intentionally excluded: including it would re-fire the effect
-    // on every state transition and loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [online, pending, sync]);
-
-  useEffect(() => {
-    if (state === 'idle' && pending > 0) setState('pending');
-  }, [pending, state]);
+  const state: SyncState = syncing
+    ? 'syncing'
+    : failed && pending > 0
+      ? 'error'
+      : pending > 0
+        ? 'pending'
+        : 'idle';
 
   return { pending, state, sync };
+}
+
+/**
+ * Replays the queue whenever connectivity returns.
+ *
+ * Mounted once, in the offline banner, so the retry does not depend on the user
+ * noticing a button — which is the entire point of queueing in the first place.
+ */
+export function useAutoSync(): void {
+  const online = useOnlineStatus();
+  const pending = usePendingCount();
+  const { sync } = useSyncQueue();
+
+  const shouldSync = online && pending > 0;
+
+  // Subscribing to "we are online and have work" and firing an external
+  // action, rather than mirroring it into state first.
+  useSyncExternalStore(
+    useCallback(
+      (onChange: () => void) => {
+        if (shouldSync) {
+          const timer = setTimeout(() => {
+            void sync().then(onChange);
+          }, 500);
+          return () => clearTimeout(timer);
+        }
+        return () => {};
+      },
+      [shouldSync, sync],
+    ),
+    () => shouldSync,
+    () => false,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -114,63 +166,93 @@ export function useSyncQueue(): {
 
 export type OfflineSaveState = 'unknown' | 'unsupported' | 'saved' | 'not-saved' | 'saving';
 
-export function useOfflineSave(urls: string[]): {
-  state: OfflineSaveState;
-  save: () => void;
-  remove: () => void;
-} {
-  const [state, setState] = useState<OfflineSaveState>('unknown');
-  const key = urls.join('|');
+export function serviceWorkerAvailable(): boolean {
+  return typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+}
 
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
-      setState('unsupported');
-      return;
+function postToServiceWorker(message: Record<string, unknown>): void {
+  if (!serviceWorkerAvailable()) return;
+  void navigator.serviceWorker.ready
+    .then((registration) => registration.active?.postMessage(message))
+    .catch(() => {
+      /* worker not controlling this page yet; nothing to do */
+    });
+}
+
+/**
+ * Subscribes to the list of pages currently stored for offline use.
+ *
+ * The service worker is the source of truth — we ask it what it actually holds
+ * rather than trusting our own record of what we think we saved.
+ */
+export function useOfflineUrls(): string[] | null {
+  const isClient = useIsClient();
+  const [urls, setUrls] = useState<string[] | null>(null);
+  const [subscribed, setSubscribed] = useState(false);
+
+  const subscribe = useCallback((onChange: () => void) => {
+    if (!serviceWorkerAvailable()) {
+      setUrls([]);
+      return () => {};
     }
 
     function onMessage(event: MessageEvent) {
       const data = event.data as { type?: string; urls?: string[] } | null;
       if (!data?.type) return;
-
-      if (data.type === 'OFFLINE_STATUS') {
-        const stored = new Set(data.urls ?? []);
-        setState(urls.every((url) => stored.has(url)) ? 'saved' : 'not-saved');
+      if (data.type === 'OFFLINE_STATUS') setUrls(data.urls ?? []);
+      if (data.type === 'OFFLINE_SAVED' || data.type === 'OFFLINE_REMOVED') {
+        postToServiceWorker({ type: 'OFFLINE_STATUS' });
       }
-      if (data.type === 'OFFLINE_SAVED') setState('saved');
-      if (data.type === 'OFFLINE_REMOVED' || data.type === 'OFFLINE_CLEARED') setState('not-saved');
+      if (data.type === 'OFFLINE_CLEARED') setUrls([]);
+      onChange();
     }
 
     navigator.serviceWorker.addEventListener('message', onMessage);
-    navigator.serviceWorker.ready
-      .then((registration) => registration.active?.postMessage({ type: 'OFFLINE_STATUS' }))
-      .catch(() => setState('unsupported'));
+    postToServiceWorker({ type: 'OFFLINE_STATUS' });
 
     return () => navigator.serviceWorker.removeEventListener('message', onMessage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  const post = useCallback((message: Record<string, unknown>) => {
-    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.ready
-      .then((registration) => registration.active?.postMessage(message))
-      .catch(() => setState('unsupported'));
   }, []);
 
+  useSyncExternalStore(subscribe, () => subscribed, () => false);
+
+  // `subscribed` exists only to give the store a stable snapshot; flipping it
+  // once keeps the subscription alive without re-reading the worker on every
+  // render.
+  if (isClient && !subscribed) setSubscribed(true);
+
+  return urls;
+}
+
+export function useOfflineSave(urls: string[]): {
+  state: OfflineSaveState;
+  save: () => void;
+  remove: () => void;
+} {
+  const stored = useOfflineUrls();
+  const isClient = useIsClient();
+  const [optimistic, setOptimistic] = useState<OfflineSaveState | null>(null);
+
   const save = useCallback(() => {
-    setState('saving');
-    post({ type: 'SAVE_OFFLINE', urls, key });
-  }, [post, urls, key]);
+    setOptimistic('saving');
+    postToServiceWorker({ type: 'SAVE_OFFLINE', urls, key: urls.join('|') });
+  }, [urls]);
 
   const remove = useCallback(() => {
-    post({ type: 'REMOVE_OFFLINE', urls, key });
-  }, [post, urls, key]);
+    setOptimistic(null);
+    postToServiceWorker({ type: 'REMOVE_OFFLINE', urls, key: urls.join('|') });
+  }, [urls]);
+
+  let state: OfflineSaveState = 'unknown';
+  if (!isClient) state = 'unknown';
+  else if (!serviceWorkerAvailable()) state = 'unsupported';
+  else if (stored === null) state = 'unknown';
+  else if (urls.every((url) => stored.includes(url))) state = 'saved';
+  else if (optimistic === 'saving') state = 'saving';
+  else state = 'not-saved';
 
   return { state, save, remove };
 }
 
 export function clearOfflineContent(): void {
-  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
-  void navigator.serviceWorker.ready.then((registration) =>
-    registration.active?.postMessage({ type: 'CLEAR_OFFLINE' }),
-  );
+  postToServiceWorker({ type: 'CLEAR_OFFLINE' });
 }
