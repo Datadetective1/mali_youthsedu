@@ -102,8 +102,11 @@ matter:
 | `AI_PROVIDER` | no | `none` (default), `mock`, or `anthropic` |
 | `AI_API_KEY` | if AI enabled | **Server only** |
 
-`productionConfigIssues()` in `src/config/index.ts` refuses to let development
-settings pass silently into a production build.
+`productionConfigIssues()` in `src/config/index.ts` detects development settings
+that have reached a production build — a file-based data driver, a mock AI
+provider, a missing admin allowlist — and reports them at the top of `/admin`,
+so the person who can fix it is told. It warns rather than refusing to boot: an
+empty `ADMIN_EMAILS` should not take the whole site down.
 
 ---
 
@@ -204,6 +207,7 @@ Stated plainly, because a launch checklist built on optimism is worthless.
 
 | Document | Contents |
 | --- | --- |
+| [GO_LIVE.md](docs/GO_LIVE.md) | **Click-by-click guide from repository to live deployment** |
 | [PRODUCT_VISION.md](docs/PRODUCT_VISION.md) | Mission, principles, the HR findings that shaped the product |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit together |
 | [DATABASE.md](docs/DATABASE.md) | Schema, RLS model, migrations |

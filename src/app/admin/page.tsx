@@ -7,6 +7,7 @@ import { practicalProjects } from '@/content/projects';
 import { resourcesWithOverrides } from '@/lib/content-overlay';
 import { PageHeader } from '@/components/layout/page';
 import { Card, CardBody, Notice, Section } from '@/components/ui';
+import { ConfigWarnings } from '@/components/admin/config-warnings';
 
 export const metadata: Metadata = { title: 'Administration', robots: { index: false } };
 
@@ -28,6 +29,8 @@ export default async function AdminOverviewPage() {
   return (
     <>
       <PageHeader title={t.admin.title} description={t.admin.intro} />
+
+      <ConfigWarnings />
 
       {adminConfig.emails.length === 0 ? (
         <Notice tone="warning" className="mb-6">
