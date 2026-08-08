@@ -32,13 +32,23 @@ export default defineConfig({
       name: 'mobile',
       use: { ...devices['Pixel 5'] },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts/,
+      // `desktop.spec.ts` asserts wide-viewport layout; it is meaningless here.
+      testIgnore: [/auth\.setup\.ts/, /desktop\.spec\.ts/],
     },
     {
+      /*
+       * Desktop verifies that layouts hold at a wide viewport. It deliberately
+       * does NOT re-run the stateful journey: both projects share one set of
+       * accounts and one database, so running the mutating flows twice means
+       * the second run operates on state the first already changed — which
+       * produces failures that say nothing about the product.
+       *
+       * Mobile is the primary target and runs everything.
+       */
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts/,
+      testMatch: [/guest\.spec\.ts/, /desktop\.spec\.ts/],
     },
   ],
 
