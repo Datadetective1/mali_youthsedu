@@ -21,6 +21,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { Badge, BulletList, Card, CardBody, Section } from '@/components/ui';
 import { PageShell } from '@/components/layout/page';
 import { PathCard } from '@/components/path-card';
+import { JourneyIllustration } from '@/components/visual/journey-illustration';
 import { plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -60,33 +61,39 @@ export default async function LandingPage() {
       {/* ---------------------------------------------------------------- Hero */}
       <section className="border-b border-sand-200 bg-white">
         <PageShell width="wide" className="py-10 sm:py-16">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">
-              {t.landing.heroEyebrow}
-            </p>
-            <h1 className="mt-3 text-3xl font-bold leading-tight sm:text-5xl">
-              {t.landing.heroTitle}
-            </h1>
-            <p className="mt-4 text-lg text-sand-700">{t.landing.heroBody}</p>
+          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">
+                {t.landing.heroEyebrow}
+              </p>
+              <h1 className="mt-3 text-3xl font-bold leading-tight sm:text-5xl">
+                {t.landing.heroTitle}
+              </h1>
+              <p className="mt-4 text-lg text-sand-700">{t.landing.heroBody}</p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href={session ? '/tableau-de-bord' : '/bienvenue'} size="lg">
-                {t.landing.heroPrimaryCta}
-                <ArrowRight aria-hidden />
-              </ButtonLink>
-              <ButtonLink href="/parcours" size="lg" variant="secondary">
-                {t.landing.heroSecondaryCta}
-              </ButtonLink>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <ButtonLink href={session ? '/tableau-de-bord' : '/bienvenue'} size="lg">
+                  {t.landing.heroPrimaryCta}
+                  <ArrowRight aria-hidden />
+                </ButtonLink>
+                <ButtonLink href="/parcours" size="lg" variant="secondary">
+                  {t.landing.heroSecondaryCta}
+                </ButtonLink>
+              </div>
+              <p className="mt-3 text-sm text-sand-500">{t.landing.heroNoAccount}</p>
+
+              <ul className="mt-7 flex flex-wrap gap-2">
+                {t.landing.heroPoints.map((point) => (
+                  <li key={point}>
+                    <Badge tone="brand">{point}</Badge>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <p className="mt-3 text-sm text-sand-500">{t.landing.heroNoAccount}</p>
 
-            <ul className="mt-7 flex flex-wrap gap-2">
-              {t.landing.heroPoints.map((point) => (
-                <li key={point}>
-                  <Badge tone="brand">{point}</Badge>
-                </li>
-              ))}
-            </ul>
+            {/* Inline SVG, ~2 KB. A photograph here would cost 100–400 KB on a
+                connection where that is real money. */}
+            <JourneyIllustration className="hidden h-auto w-full sm:block" />
           </div>
         </PageShell>
       </section>

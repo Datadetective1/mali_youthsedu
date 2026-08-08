@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { CheckCircle2, Lock } from 'lucide-react';
 import { getDictionary } from '@/lib/i18n';
 import { getSession } from '@/lib/auth';
 import { listNotes, listProgress, listRoadmaps } from '@/lib/db/repository';
@@ -12,9 +11,9 @@ import { PageHeader, PageShell } from '@/components/layout/page';
 import { Badge, Disclosure, EmptyState, Notice, ProgressBar, Section } from '@/components/ui';
 import { ButtonLink } from '@/components/ui/button';
 import { StagePanel } from '@/components/roadmap/stage-panel';
+import { StagePreview } from '@/components/roadmap/stage-preview';
 import { SaveOfflineButton } from '@/components/offline/save-offline-button';
-import { formatMinutes } from '@/lib/utils';
-import { format, plural } from '@/lib/i18n/format';
+import { plural } from '@/lib/i18n/format';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -165,33 +164,30 @@ export default async function MyPathPage({
         <ol className="space-y-3">
           {path.stages.map((stage) => {
             const stageState = pathProgress.stages.find((entry) => entry.stageId === stage.id);
-            const complete = stageState?.status === 'completed';
             const isNext = pathProgress.nextStageId === stage.id;
 
             return (
               <li key={stage.id}>
                 <Disclosure
                   defaultOpen={isNext}
+                  summaryClassName="items-start"
+                  expandLabel={isNext ? 'Continuer' : 'Ouvrir'}
                   summary={
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      {complete ? (
-                        <CheckCircle2 aria-hidden className="size-5 text-success-600" />
-                      ) : stageState?.locked ? (
-                        <Lock aria-hidden className="size-4 text-sand-400" />
-                      ) : null}
-                      <span className="text-sm font-semibold text-brand-700">
-                        {format(t.roadmap.stageLabel, { n: stage.order })}
-                      </span>
-                      <span>{stage.name}</span>
-                      <span className="text-sm font-normal text-sand-500">
-                        {stageState ? `${stageState.done}/${stageState.total}` : ''} ·{' '}
-                        {formatMinutes(stage.estimatedMinutes)}
-                      </span>
+                    <span className="block">
                       {isNext ? (
-                        <Badge tone="accent" className="ml-1">
+                        <Badge tone="accent" className="mb-2">
                           {t.roadmap.resumeHere}
                         </Badge>
                       ) : null}
+                      <StagePreview
+                        stage={stage}
+                        pathId={path.id}
+                        resourceCount={stage.resourceIds.length}
+                        progress={
+                          stageState ? { done: stageState.done, total: stageState.total } : undefined
+                        }
+                        locked={Boolean(stageState?.locked)}
+                      />
                     </span>
                   }
                 >

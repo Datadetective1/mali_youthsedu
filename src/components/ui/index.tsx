@@ -258,27 +258,45 @@ export function Disclosure({
   children,
   defaultOpen = false,
   className,
+  summaryClassName,
+  expandLabel,
 }: {
   summary: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
   className?: string;
+  summaryClassName?: string;
+  /**
+   * Explicit affordance text. A bare chevron does not read as tappable — users
+   * scrolled past collapsed stages assuming there was nothing inside them.
+   */
+  expandLabel?: string;
 }) {
   return (
     <details
       open={defaultOpen}
       className={cn(
-        'group rounded-lg border border-sand-200 bg-white [&[open]>summary]:border-b',
+        'group rounded-[--radius-card] border border-sand-200 bg-white [&[open]>summary]:border-b',
         className,
       )}
     >
-      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 border-sand-200 px-4 py-3 font-semibold marker:content-none">
-        <span className="min-w-0">{summary}</span>
-        <span
-          aria-hidden
-          className="shrink-0 text-sand-500 transition-transform group-open:rotate-180"
-        >
-          ▾
+      <summary
+        className={cn(
+          'flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 border-sand-200 px-4 py-3 font-semibold marker:content-none',
+          summaryClassName,
+        )}
+      >
+        <span className="min-w-0 flex-1">{summary}</span>
+        <span className="flex shrink-0 items-center gap-1 self-center text-sm font-medium text-brand-700">
+          {expandLabel ? (
+            <span className="hidden sm:inline">
+              <span className="group-open:hidden">{expandLabel}</span>
+              <span className="hidden group-open:inline">Masquer</span>
+            </span>
+          ) : null}
+          <span aria-hidden className="transition-transform group-open:rotate-180">
+            ▾
+          </span>
         </span>
       </summary>
       <div className="px-4 py-3 text-sm">{children}</div>

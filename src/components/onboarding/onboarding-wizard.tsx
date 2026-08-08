@@ -165,61 +165,21 @@ function toOptions(record: Record<string, string>): { value: string; label: stri
   return Object.entries(record).map(([value, label]) => ({ value, label }));
 }
 
+/**
+ * The six questions that actually change the answer.
+ *
+ * This was fourteen. A first-time visitor abandons a questionnaire long before
+ * question fourteen, and most of those questions were refinements: they nudged
+ * the ranking without changing which pathway came out on top.
+ *
+ * These six carry the decision — goal and interests dominate the scoring, the
+ * two level questions decide whether a foundational track is needed first, and
+ * hours decides the pace. Everything else now has a sensible default that the
+ * user can refine from their profile once they have a reason to care.
+ */
 function buildSteps(labels: Dictionary['onboarding']): Step[] {
   const o = labels.options;
   return [
-    {
-      key: 'ageRange',
-      kind: 'single',
-      section: 'about',
-      legend: labels.q.ageRange,
-      hint: labels.q.ageRangeHint,
-      optional: true,
-      options: toOptions(o.ageRange),
-    },
-    {
-      key: 'educationLevel',
-      kind: 'single',
-      section: 'about',
-      legend: labels.q.educationLevel,
-      options: toOptions(o.education),
-    },
-    {
-      key: 'status',
-      kind: 'single',
-      section: 'situation',
-      legend: labels.q.status,
-      options: toOptions(o.status),
-    },
-    {
-      key: 'locationType',
-      kind: 'single',
-      section: 'situation',
-      legend: labels.q.locationType,
-      hint: labels.q.locationTypeHint,
-      options: toOptions(o.location),
-    },
-    {
-      key: 'frenchLevel',
-      kind: 'single',
-      section: 'skills',
-      legend: labels.q.frenchLevel,
-      options: toOptions(o.frenchLevel),
-    },
-    {
-      key: 'englishLevel',
-      kind: 'single',
-      section: 'skills',
-      legend: labels.q.englishLevel,
-      options: toOptions(o.englishLevel),
-    },
-    {
-      key: 'digitalLevel',
-      kind: 'single',
-      section: 'skills',
-      legend: labels.q.digitalLevel,
-      options: toOptions(o.digitalLevel),
-    },
     {
       key: 'goal',
       kind: 'single',
@@ -236,25 +196,18 @@ function buildSteps(labels: Dictionary['onboarding']): Step[] {
       options: toOptions(o.interests),
     },
     {
-      key: 'hoursPerWeek',
+      key: 'digitalLevel',
       kind: 'single',
-      section: 'practical',
-      legend: labels.q.hoursPerWeek,
-      options: toOptions(o.hours),
+      section: 'skills',
+      legend: labels.q.digitalLevel,
+      options: toOptions(o.digitalLevel),
     },
     {
-      key: 'connectivity',
+      key: 'englishLevel',
       kind: 'single',
-      section: 'practical',
-      legend: labels.q.connectivity,
-      options: toOptions(o.connectivity),
-    },
-    {
-      key: 'device',
-      kind: 'single',
-      section: 'practical',
-      legend: labels.q.device,
-      options: toOptions(o.device),
+      section: 'skills',
+      legend: labels.q.englishLevel,
+      options: toOptions(o.englishLevel),
     },
     {
       key: 'experience',
@@ -265,11 +218,11 @@ function buildSteps(labels: Dictionary['onboarding']): Step[] {
       options: toOptions(o.experience),
     },
     {
-      key: 'learningStyle',
+      key: 'hoursPerWeek',
       kind: 'single',
       section: 'practical',
-      legend: labels.q.learningStyle,
-      options: toOptions(o.learningStyle),
+      legend: labels.q.hoursPerWeek,
+      options: toOptions(o.hours),
     },
   ];
 }

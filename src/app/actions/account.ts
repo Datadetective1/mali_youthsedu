@@ -129,20 +129,33 @@ function safeRedirect(target: string): string {
 // Onboarding
 // ---------------------------------------------------------------------------
 
+/*
+ * Onboarding asks six questions; the rest carry defaults.
+ *
+ * The defaults are the least-assuming option available, not the most common
+ * one — `urbain` and `smartphone` do not downgrade anyone's recommendation,
+ * whereas guessing `rural` or `telephone-simple` would silently steer someone
+ * away from pathways they could do. Everything here is editable from the
+ * profile, and the recommendation explains which factors it used.
+ */
 const onboardingSchema = z.object({
   ageRange: z.enum(['15-17', '18-24', '25-30', '31-35', 'prefer-not']).optional(),
-  educationLevel: z.enum(['none', 'primaire', 'college', 'lycee', 'technique', 'licence', 'master']),
-  status: z.enum([
-    'eleve',
-    'etudiant',
-    'diplome',
-    'sans-emploi',
-    'emploi-partiel',
-    'salarie',
-    'independant',
-  ]),
-  locationType: z.enum(['urbain', 'periurbain', 'rural']),
-  frenchLevel: z.enum(['base', 'courant', 'avance']),
+  educationLevel: z
+    .enum(['none', 'primaire', 'college', 'lycee', 'technique', 'licence', 'master'])
+    .default('lycee'),
+  status: z
+    .enum([
+      'eleve',
+      'etudiant',
+      'diplome',
+      'sans-emploi',
+      'emploi-partiel',
+      'salarie',
+      'independant',
+    ])
+    .default('diplome'),
+  locationType: z.enum(['urbain', 'periurbain', 'rural']).default('urbain'),
+  frenchLevel: z.enum(['base', 'courant', 'avance']).default('courant'),
   englishLevel: z.enum(['aucun', 'debutant', 'intermediaire', 'avance']),
   digitalLevel: z.enum(['debutant', 'intermediaire', 'avance']),
   goal: z.enum([
@@ -173,10 +186,12 @@ const onboardingSchema = z.object({
     .min(1, 'Choisissez au moins un domaine.')
     .max(3),
   hoursPerWeek: z.coerce.number().int().min(1).max(60),
-  connectivity: z.enum(['rare', 'limitee', 'correcte', 'bonne']),
-  device: z.enum(['telephone-simple', 'smartphone', 'ordinateur-partage', 'ordinateur']),
+  connectivity: z.enum(['rare', 'limitee', 'correcte', 'bonne']).default('correcte'),
+  device: z
+    .enum(['telephone-simple', 'smartphone', 'ordinateur-partage', 'ordinateur'])
+    .default('smartphone'),
   experience: z.enum(['aucune', 'scolaire-benevole', 'stage', 'moins-2ans', 'plus-2ans']),
-  learningStyle: z.enum(['lecture', 'video', 'pratique', 'groupe']),
+  learningStyle: z.enum(['lecture', 'video', 'pratique', 'groupe']).default('pratique'),
 });
 
 export async function saveOnboardingAction(
